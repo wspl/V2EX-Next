@@ -12,6 +12,7 @@ import android.view.View
 import android.view.ViewGroup
 import com.fondesa.recyclerviewdivider.RecyclerViewDivider
 import moe.impl.v2exnext.R
+import moe.impl.v2exnext.data.model.Partition
 import moe.impl.v2exnext.data.model.TopicList
 import moe.impl.v2exnext.data.model.TopicListItem
 import moe.impl.v2exnext.ui.activity.MainActivity
@@ -19,9 +20,10 @@ import moe.impl.v2exnext.ui.adapter.TopicListAdapter
 import moe.impl.v2exnext.ui.presenter.TopicListPresenter
 import moe.impl.v2exnext.ui.view.TopicListView
 
-class TopicListFragment : Fragment(), TopicListView, SwipeRefreshLayout.OnRefreshListener {
+class TopicListFragment(partition: Partition) : Fragment(), TopicListView, SwipeRefreshLayout.OnRefreshListener {
     val mainActivity by lazy { activity as MainActivity }
-    val presenter by lazy { TopicListPresenter(this) }
+    val presenter by lazy { TopicListPresenter(this, partition) }
+    val partition by lazy { partition }
 
     var topicListAdapter: TopicListAdapter? = null
     val topics = mutableListOf<TopicListItem>()
@@ -39,7 +41,7 @@ class TopicListFragment : Fragment(), TopicListView, SwipeRefreshLayout.OnRefres
 
         recyclerView = view.findViewById(R.id.recycler_topic_list) as RecyclerView
 
-        topicListAdapter = TopicListAdapter(topics, presenter)
+        topicListAdapter = TopicListAdapter(topics, presenter, partition.isSinglePage)
 
         recyclerView?.setHasFixedSize(true)
         recyclerView?.adapter = topicListAdapter
@@ -58,15 +60,15 @@ class TopicListFragment : Fragment(), TopicListView, SwipeRefreshLayout.OnRefres
 
         presenter.fetchTopics()
 
+        Handler().postDelayed({
+            swipeLayout?.isRefreshing = true
+        }, 100)
+
         return view
     }
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        Handler().postDelayed({
-            swipeLayout?.isRefreshing = true
-        }, 100)
     }
 
     override fun onRefresh() {

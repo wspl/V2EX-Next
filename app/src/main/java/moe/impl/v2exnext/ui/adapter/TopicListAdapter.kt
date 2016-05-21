@@ -16,10 +16,14 @@ import moe.impl.v2exnext.R
 import moe.impl.v2exnext.data.model.TopicListItem
 import moe.impl.v2exnext.ui.presenter.TopicListPresenter
 
-class TopicListAdapter(data: MutableList<TopicListItem>, presenter: TopicListPresenter) : RecyclerView.Adapter<ViewHolder>() {
+class TopicListAdapter(
+        data: MutableList<TopicListItem>,
+        presenter: TopicListPresenter,
+        isLoadMoreDisabled: Boolean) : RecyclerView.Adapter<ViewHolder>() {
 
     val data by lazy { data }
     val presenter by lazy { presenter }
+    val isLoadMoreDisabled by lazy { isLoadMoreDisabled }
 
     enum class ItemViewTypes {
         UNDEFINED, TOPIC, BOTTOM
@@ -35,11 +39,13 @@ class TopicListAdapter(data: MutableList<TopicListItem>, presenter: TopicListPre
                 return TopicViewHolder(view)
             }
             ItemViewTypes.BOTTOM.ordinal -> {
+                //if (!isLoadMoreDisabled) {
                 val view = LayoutInflater
                         .from(parent?.context)
                         .inflate(R.layout.view_topic_list_bottom, parent, false)
 
                 return BottomViewHolder(view)
+                //}
             }
         }
         return null
@@ -65,17 +71,19 @@ class TopicListAdapter(data: MutableList<TopicListItem>, presenter: TopicListPre
         }
     }
 
-    override fun getItemCount(): Int = if (data.size > 0) data.size + 1 else 0
+    override fun getItemCount(): Int =
+        if (isLoadMoreDisabled) data.size
+        else if (data.size > 0) data.size + 1
+        else 0
 
-    override fun getItemViewType(position: Int): Int {
-        if (position < itemCount - 1) {
-            return ItemViewTypes.TOPIC.ordinal
-        } else if (data.size > 0 && position == itemCount - 1) {
-            return ItemViewTypes.BOTTOM.ordinal
-        }
-
-        return ItemViewTypes.UNDEFINED.ordinal
-    }
+    override fun getItemViewType(position: Int): Int =
+        if (!isLoadMoreDisabled)
+            if (data.size > 0 && position == itemCount - 1)
+                ItemViewTypes.BOTTOM.ordinal
+            else
+                ItemViewTypes.TOPIC.ordinal
+        else
+            ItemViewTypes.TOPIC.ordinal
 
     class TopicViewHolder(v: View) : ViewHolder(v) {
         val view = v;

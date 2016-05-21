@@ -30,7 +30,7 @@ class TopicListParser(body: String) {
             }
         }
 
-        topicList = TopicList(mutableTopicList as List<TopicListItem>)
+        topicList = TopicList(mutableTopicList as List<TopicListItem>, null)
     }
 
 }
